@@ -1,4 +1,4 @@
-# LZLoopView-OC
+# LQLoopView-OC
 
 ##### Swift版本: [LDLoopView-Swift](https://github.com/LQi2009/LDLoopView)
 
