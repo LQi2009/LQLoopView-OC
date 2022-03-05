@@ -49,9 +49,9 @@
             continue;
         }
         
-//        if (![cls isKindOfClass:[UICollectionViewCell class]]) {
-//            continue;
-//        }
+        if (![cls isSubclassOfClass:[UICollectionViewCell class]]) {
+            continue;
+        }
         
         if ([cls conformsToProtocol:@protocol(LQLoopContentCellProtocol)]) {
             if ([cls respondsToSelector:@selector(reuseIdentifier)]) {
@@ -60,7 +60,6 @@
             }
         }
     }
-    
 }
 
 - (void) configDatas:(NSArray<id<LQLoopContentProtocol>> *) datas {
