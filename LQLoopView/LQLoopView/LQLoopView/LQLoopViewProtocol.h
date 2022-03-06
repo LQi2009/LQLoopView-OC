@@ -23,6 +23,8 @@
 
 - (void) loopView:(LQLoopView *)loop didSelectedAtIndex:(NSInteger) index;
 - (void) loopView:(LQLoopView *)loop didScrolledAtIndex:(NSInteger) index;
+- (void) loopView:(LQLoopView *)loop willDisplayCell:(id<LQLoopContentCellProtocol>)cell forItemaAtIndex:(NSInteger) index ;
+- (void) loopView:(LQLoopView *)loop didDisplayCell:(id<LQLoopContentCellProtocol>)cell forItemaAtIndex:(NSInteger) index ;
 @end
 
 

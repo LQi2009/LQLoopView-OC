@@ -21,7 +21,8 @@
 @property (nonatomic, assign) CGFloat width;
 @property (nonatomic, assign) CGFloat height;
 @property (nonatomic, assign) BOOL isAutoRunDeterectionLeft;
-
+@property (nonatomic, strong) NSIndexPath *currentIndexPath;
+@property (nonatomic, strong) NSIndexPath *lastIndexPath;
 @property (nonatomic, strong) NSMutableArray<id<LQLoopContentProtocol>> *dataSource;
 @end
 @implementation LQLoopView
@@ -35,7 +36,8 @@
         self.isAutoScroll = YES;
         self.isAutoRunDeterectionLeft = YES;
         self.isChangeAutoScrollDeterectionWithDragging = YES;
-        
+        self.currentIndexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+//        self.lastIndexPath = self.currentIndexPath;
         [self.collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:LQLoopViewDefaultReuseID];
     }
     
@@ -77,7 +79,7 @@
     if (self.timer == nil) {
         
         self.isAutoScroll = YES;
-        self.timer = [LQLoopTimer scheduledTimerWithTimeInterval:self.timeInterval target:self selector:@selector(autoRun) userInfo:nil repeats:YES];
+        self.timer = [LQLoopTimer scheduledTimerWithTimeInterval:self.timeInterval target:self selector:@selector(autoScrollToNextItem) userInfo:nil repeats:YES];
         
         [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
     }
@@ -126,7 +128,7 @@
     return self.frame.size.height;
 }
 
-- (void)autoRun {
+- (void)autoScrollToNextItem {
     
     CGPoint offset = self.collectionView.contentOffset;
     
@@ -147,7 +149,6 @@
         
         [self.collectionView scrollRectToVisible:CGRectMake(offset.x, 0, self.width, self.height) animated:YES];
     }
-    
 }
 
 - (void)layoutSubviews {
@@ -156,10 +157,10 @@
     self.collectionView.frame = self.bounds;
     
     // 滚动到中间一组
+    self.currentIndexPath = [NSIndexPath indexPathForItem:0 inSection:1];
     [self.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:1] atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
     
     if (self.isAutoScroll) {
-        
         [self startTimer];
     }
 }
@@ -198,6 +199,21 @@
     return cell;
 }
 
+- (void)collectionView:(UICollectionView *)collectionView willDisplayCell:(UICollectionViewCell *)cell forItemAtIndexPath:(NSIndexPath *)indexPath {
+    
+    NSLog(@"willDisplayCell %@", indexPath);
+    if (self.delegate && [self.delegate respondsToSelector:@selector(loopView:willDisplayCell:forItemaAtIndex:)]) {
+        [self.delegate loopView:self willDisplayCell:(id<LQLoopContentCellProtocol>)cell forItemaAtIndex:indexPath.row];
+    }
+}
+
+- (void)collectionView:(UICollectionView *)collectionView didEndDisplayingCell:(UICollectionViewCell *)cell forItemAtIndexPath:(NSIndexPath *)indexPath {
+    
+    if (self.delegate && [self.delegate respondsToSelector:@selector(loopView:didDisplayCell:forItemaAtIndex:)]) {
+        [self.delegate loopView:self didDisplayCell:(id<LQLoopContentCellProtocol>)cell forItemaAtIndex:indexPath.row];
+    }
+}
+
 #pragma mark - cell的点击事件
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     
@@ -211,11 +227,11 @@
     return CGSizeMake(self.width, self.height);
 }
 
+#pragma mark - 处理手势
 //这里是在手动滑动将要开始的时候将计时器停止(移除), 防止其在后台还在计时, 造成滚动多页的情况
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
     
     if (self.isAutoScroll) {
-        
         [self stopTimer];
     }
 }
@@ -243,19 +259,16 @@
 
 //这里是处理手动滑动之后视图的位置调整
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-    
-    [self keepInMiddle];
+    [self adjustToMiddle];
 }
 
 //这里是处理定时器滚动完之后视图位置调整
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView {
-    
-    [self keepInMiddle];
-    
+    [self adjustToMiddle];
 }
 
-#pragma mark - 这个方法是为了保证视图永远处在最中间的那一组, 不会滚动到头
-- (void)keepInMiddle {
+// 这个方法是为了保证视图永远处在最中间的那一组, 不会滚动到头
+- (void) adjustToMiddle {
     
     CGFloat temp = self.collectionView.contentOffset.x / self.width;
     
@@ -266,10 +279,8 @@
         i = (int)temp;
     }
     
-    NSInteger index = i % self.dataSource.count ;
-    
-    if (self.collectionView.contentOffset.x < self.width * self.dataSource.count || self.collectionView.contentOffset.x >  self.width * (self.dataSource.count * 2 - 1))
-    {
+    NSInteger index = (i % self.dataSource.count);
+    if (self.collectionView.contentOffset.x < self.width * self.dataSource.count || self.collectionView.contentOffset.x >  self.width * (self.dataSource.count * 2 - 1)) {
         
         [self.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:index inSection:1] atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
     }
