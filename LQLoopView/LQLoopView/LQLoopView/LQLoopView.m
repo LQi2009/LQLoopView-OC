@@ -209,8 +209,8 @@
 
 - (void)collectionView:(UICollectionView *)collectionView didEndDisplayingCell:(UICollectionViewCell *)cell forItemAtIndexPath:(NSIndexPath *)indexPath {
     
-    if (self.delegate && [self.delegate respondsToSelector:@selector(loopView:didDisplayCell:forItemaAtIndex:)]) {
-        [self.delegate loopView:self didDisplayCell:(id<LQLoopContentCellProtocol>)cell forItemaAtIndex:indexPath.row];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(loopView:didEndDisplayCell:forItemaAtIndex:)]) {
+        [self.delegate loopView:self didEndDisplayCell:(id<LQLoopContentCellProtocol>)cell forItemaAtIndex:indexPath.row];
     }
 }
 
